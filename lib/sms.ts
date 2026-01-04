@@ -57,9 +57,7 @@ export async function sendSms(to: string, message: string): Promise<boolean> {
         to: to,
       })
 
-      console.log(`✅ SMS SENT SUCCESSFULLY`)
-      console.log(`Message SID: ${result.sid}`)
-      console.log(`Status: ${result.status}`)
+      console.log(`✅ OTP SMS sent sid=${result.sid} status=${result.status}`)
 
       // Check for trial account limitations
       if (result.status === 'undelivered' || result.status === 'failed') {
@@ -69,13 +67,10 @@ export async function sendSms(to: string, message: string): Promise<boolean> {
 
       return true
     } catch (error: unknown) {
-      console.error('❌ TWILIO ERROR')
-
       if (error && typeof error === 'object') {
         const twilioError = error as { code?: number; message?: string; moreInfo?: string; status?: number }
 
-        console.error(`Error Code: ${twilioError.code || 'unknown'}`)
-        console.error(`Error Message: ${twilioError.message || 'unknown'}`)
+        console.error(`❌ OTP SMS failed error=${twilioError.code || 'unknown'} message="${twilioError.message || 'unknown'}"`)
 
         // Check for common Twilio errors
         if (twilioError.code === 21608) {

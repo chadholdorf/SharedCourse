@@ -140,13 +140,14 @@ export async function sendVerificationCode(
     }
 
     // Send SMS
+    console.log(`📤 OTP SMS sending to ${formattedPhone}`)
     const smsSuccess = await sendSms(
       formattedPhone,
       `Your Bay Area Supper Club verification code is: ${code}`
     )
 
     if (!smsSuccess) {
-      console.error('❌ SMS failed to send, but code was saved in database')
+      console.error(`❌ OTP SMS failed for ${formattedPhone}`)
 
       // In production, return error if SMS fails
       if (!isDev) {
@@ -157,6 +158,8 @@ export async function sendVerificationCode(
       }
       // In dev, allow it to proceed (code is in DB)
       console.log('   ℹ️  Proceeding anyway in dev mode - code stored in DB')
+    } else {
+      console.log(`✅ OTP SMS sent successfully to ${formattedPhone}`)
     }
 
     return {
