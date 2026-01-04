@@ -57,7 +57,7 @@ export default function JoinPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-900 mb-2">
               Full Name
             </label>
             <input
@@ -68,12 +68,12 @@ export default function JoinPage() {
               required
               placeholder="John Doe"
               disabled={isLoading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-900 mb-2">
               Phone Number
             </label>
             <input
@@ -84,7 +84,7 @@ export default function JoinPage() {
               required
               placeholder="415-555-1234"
               disabled={isLoading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -98,13 +98,13 @@ export default function JoinPage() {
               disabled={isLoading}
               className="mt-1 w-4 h-4 border-gray-300 rounded text-gray-900 focus:ring-gray-900"
             />
-            <label htmlFor="terms" className="text-sm text-gray-600">
+            <label htmlFor="terms" className="text-sm text-gray-800">
               I agree to the{' '}
-              <a href="/terms" className="text-gray-900 hover:underline">
+              <a href="/terms" className="text-gray-900 underline hover:text-gray-700">
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="/privacy" className="text-gray-900 hover:underline">
+              <a href="/privacy" className="text-gray-900 underline hover:text-gray-700">
                 Privacy Policy
               </a>
             </label>
