@@ -39,9 +39,6 @@ export async function createDinnerRequest(
       }
     }
 
-    // Calculate party size
-    const partySize = validated.isCouple ? 2 : 1
-
     // Create the dinner request
     const request = await prisma.dinnerRequest.create({
       data: {

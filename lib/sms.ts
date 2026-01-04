@@ -5,11 +5,6 @@
  * otherwise logs to console (stub mode for development).
  */
 
-interface SmsMessage {
-  to: string
-  message: string
-}
-
 /**
  * Send an SMS message
  *
