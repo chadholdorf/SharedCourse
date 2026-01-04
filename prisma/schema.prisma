@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum EventStatus {
+  draft
+  open
+  closed
+}
+
+enum Budget {
+  ONE   // $
+  TWO   // $$
+}
+
+enum Diet {
+  none
+  vegetarian
+  vegan
+  pescatarian
+  glutenFree
+  dairyFree
+}
+
+enum Vibe {
+  relaxed
+  conversational
+  mix
+}
+
+enum AfterDinner {
+  home
+  open
+}
+
+model Event {
+  id            String       @id @default(cuid())
+  title         String
+  city          String
+  startAt       DateTime
+  rsvpCloseAt   DateTime
+  groupSize     Int          @default(6)
+  status        EventStatus  @default(draft)
+  createdAt     DateTime     @default(now())
+
+  rsvps         Rsvp[]
+
+  @@index([status, rsvpCloseAt])
+}
+
+model Rsvp {
+  id            String       @id @default(cuid())
+  eventId       String
+  event         Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Contact Info (Step B)
+  name          String
+  email         String
+  phone         String
+
+  // Preferences (Step A)
+  partySize     Int          // 1 or 2
+  budget        Budget
+  diet          Diet
+  allergies     String       @default("")
+  vibe          Vibe?
+  afterDinner   AfterDinner?
+
+  createdAt     DateTime     @default(now())
+
+  @@index([eventId])
+  @@index([email])
+}
