@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createDinnerRequest } from '@/lib/actions/dinner-request-actions'
-import { formatPhoneE164 } from '@/lib/sms'
+import { formatPhoneE164 } from '@/lib/phone-utils'
 import { SubmitButton } from '@/components/submit-button'
 
 export default function RequestDinnerPage() {
