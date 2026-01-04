@@ -120,6 +120,8 @@ export async function sendVerificationCode(
     const codeHash = hashCode(code)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
+    const isDev = process.env.NODE_ENV !== 'production'
+
     // Store verification code
     await prisma.phoneVerificationCode.create({
       data: {
@@ -127,8 +129,15 @@ export async function sendVerificationCode(
         codeHash,
         expiresAt,
         lastResendAt: new Date(),
+        // Store raw code in dev mode only for debugging
+        otpDebugCode: isDev ? code : null,
       },
     })
+
+    console.log(`🔐 OTP Code generated for ${formattedPhone}`)
+    if (isDev) {
+      console.log(`   DEV MODE: Code is ${code}`)
+    }
 
     // Send SMS
     const smsSuccess = await sendSms(
@@ -137,7 +146,17 @@ export async function sendVerificationCode(
     )
 
     if (!smsSuccess) {
-      console.error('SMS failed to send, but code was saved')
+      console.error('❌ SMS failed to send, but code was saved in database')
+
+      // In production, return error if SMS fails
+      if (!isDev) {
+        return {
+          success: false,
+          error: "We couldn't send a code right now. Please try again in a minute.",
+        }
+      }
+      // In dev, allow it to proceed (code is in DB)
+      console.log('   ℹ️  Proceeding anyway in dev mode - code stored in DB')
     }
 
     return {
@@ -234,4 +253,29 @@ export async function isPhoneVerified(phone: string): Promise<boolean> {
   })
 
   return !!verified
+}
+
+/**
+ * Get debug OTP code (development only)
+ */
+export async function getDebugOtpCode(phone: string): Promise<string | null> {
+  const isDev = process.env.NODE_ENV !== 'production'
+
+  if (!isDev) {
+    return null
+  }
+
+  const formattedPhone = formatPhoneE164(phone)
+
+  const code = await prisma.phoneVerificationCode.findFirst({
+    where: {
+      phone: formattedPhone,
+      verifiedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: 'desc' },
+    select: { otpDebugCode: true },
+  })
+
+  return code?.otpDebugCode || null
 }

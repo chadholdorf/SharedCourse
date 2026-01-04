@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { verifyCode, sendVerificationCode } from '@/lib/actions/auth-actions'
+import { verifyCode, sendVerificationCode, getDebugOtpCode } from '@/lib/actions/auth-actions'
 import { BackButton } from '@/components/onboarding/back-button'
 
 export default function VerifyPage() {
@@ -14,6 +14,7 @@ export default function VerifyPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [canResend, setCanResend] = useState(false)
   const [resendCountdown, setResendCountdown] = useState(30)
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null)
 
   useEffect(() => {
     const storedPhone = sessionStorage.getItem('signup_phone')
@@ -22,6 +23,13 @@ export default function VerifyPage() {
       return
     }
     setPhone(storedPhone)
+
+    // Fetch dev OTP code in development mode
+    const fetchDevCode = async () => {
+      const code = await getDebugOtpCode(storedPhone)
+      setDevOtpCode(code)
+    }
+    fetchDevCode()
   }, [router])
 
   useEffect(() => {
@@ -64,6 +72,10 @@ export default function VerifyPage() {
       setSuccess('New code sent!')
       setCanResend(false)
       setResendCountdown(30)
+
+      // Refresh dev OTP code
+      const code = await getDebugOtpCode(phone)
+      setDevOtpCode(code)
     } else {
       setError(result.error)
     }
@@ -153,6 +165,15 @@ export default function VerifyPage() {
             {canResend ? 'Resend code' : `Resend in ${resendCountdown}s`}
           </button>
         </div>
+
+        {devOtpCode && (
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs font-medium text-yellow-800 mb-1">🔧 Dev Only</p>
+            <p className="text-sm text-yellow-900">
+              OTP Code: <span className="font-mono font-bold text-lg">{devOtpCode}</span>
+            </p>
+          </div>
+        )}
       </div>
     </main>
   )

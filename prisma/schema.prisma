@@ -286,14 +286,17 @@ model Member {
 }
 
 model PhoneVerificationCode {
-  id         String    @id @default(cuid())
-  phone      String
-  codeHash   String
-  createdAt  DateTime  @default(now())
-  expiresAt  DateTime
-  attempts   Int       @default(0)
-  verifiedAt DateTime?
+  id           String    @id @default(cuid())
+  phone        String
+  codeHash     String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  attempts     Int       @default(0)
+  verifiedAt   DateTime?
   lastResendAt DateTime?
+
+  // Dev mode only - stores raw code for debugging (NOT in production)
+  otpDebugCode String?
 
   @@index([phone])
   @@index([expiresAt])
