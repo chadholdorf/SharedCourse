@@ -48,7 +48,12 @@ export default function OnboardingPage() {
     // Final step - save and complete
     setIsLoading(true)
 
-    const profileData: any = {}
+    const profileData: {
+      homeRegion?: string
+      travelRadius?: string
+      ageRange?: string
+      dinnerFrequency?: string
+    } = {}
 
     if (homeRegion) profileData.homeRegion = homeRegion
     if (travelRadius) profileData.travelRadius = travelRadius

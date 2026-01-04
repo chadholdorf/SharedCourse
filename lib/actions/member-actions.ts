@@ -41,7 +41,7 @@ export async function joinWaitlist(
     }
 
     // Create member
-    const member = await prisma.member.create({
+    await prisma.member.create({
       data: {
         phone: formattedPhone,
         status: 'waitlist',
