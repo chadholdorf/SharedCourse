@@ -98,3 +98,63 @@ export async function checkMemberStatus(
     return { success: false, error: 'Failed to check status' }
   }
 }
+
+/**
+ * Update member profile during onboarding
+ */
+export async function updateMemberProfile(
+  phone: string,
+  data: {
+    homeRegion?: 'NORTH_BAY' | 'SAN_FRANCISCO' | 'EAST_BAY' | 'SOUTH_BAY'
+    travelRadius?: 'LOCAL' | 'SHORT_DRIVE' | 'LONG_DRIVE'
+    ageRange?: 'UNDER_25' | 'AGE_25_34' | 'AGE_35_44' | 'AGE_45_54' | 'AGE_55_PLUS' | 'NO_ANSWER'
+    dinnerFrequency?: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'RARELY' | 'NO_ANSWER'
+    diningStyle?: string[]
+    socialPreference?: string
+    referralSource?: 'FRIEND' | 'INSTAGRAM' | 'TIKTOK' | 'GOOGLE' | 'REDDIT' | 'WALKING_BY' | 'NEWS' | 'OTHER' | 'NO_ANSWER'
+  }
+): Promise<ActionResponse<{ updated: true }>> {
+  try {
+    const formattedPhone = formatPhoneE164(phone)
+
+    await prisma.member.update({
+      where: { phone: formattedPhone },
+      data,
+    })
+
+    return {
+      success: true,
+      data: { updated: true },
+    }
+  } catch (error) {
+    console.error('Failed to update member profile:', error)
+    return { success: false, error: 'Failed to update profile' }
+  }
+}
+
+/**
+ * Mark onboarding as complete
+ */
+export async function completeOnboarding(
+  phone: string
+): Promise<ActionResponse<{ completed: true }>> {
+  try {
+    const formattedPhone = formatPhoneE164(phone)
+
+    await prisma.member.update({
+      where: { phone: formattedPhone },
+      data: {
+        onboardingCompletedAt: new Date(),
+        status: 'active',
+      },
+    })
+
+    return {
+      success: true,
+      data: { completed: true },
+    }
+  } catch (error) {
+    console.error('Failed to complete onboarding:', error)
+    return { success: false, error: 'Failed to complete onboarding' }
+  }
+}

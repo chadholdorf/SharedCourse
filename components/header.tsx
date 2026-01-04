@@ -20,7 +20,7 @@ export function Header() {
               Compendium
             </Link>
             <Link
-              href="/membership"
+              href="/join"
               className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gray-900 border border-transparent rounded-md hover:bg-gray-800 transition-colors"
             >
               Become a Member
@@ -31,7 +31,7 @@ export function Header() {
           {/* Mobile Nav */}
           <div className="sm:hidden flex items-center gap-3">
             <Link
-              href="/membership"
+              href="/join"
               className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-gray-900 border border-transparent rounded-md"
             >
               Join

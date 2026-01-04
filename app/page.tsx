@@ -63,7 +63,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/membership"
+                  href="/join"
                   className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-gray-900 border border-transparent rounded-md hover:bg-gray-800 transition-colors min-w-[200px]"
                 >
                   Become a Member

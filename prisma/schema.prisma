@@ -42,6 +42,48 @@ enum AfterDinner {
   open
 }
 
+enum HomeRegion {
+  NORTH_BAY
+  SAN_FRANCISCO
+  EAST_BAY
+  SOUTH_BAY
+}
+
+enum TravelRadius {
+  LOCAL
+  SHORT_DRIVE
+  LONG_DRIVE
+}
+
+enum AgeRange {
+  UNDER_25
+  AGE_25_34
+  AGE_35_44
+  AGE_45_54
+  AGE_55_PLUS
+  NO_ANSWER
+}
+
+enum DinnerFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  RARELY
+  NO_ANSWER
+}
+
+enum ReferralSource {
+  FRIEND
+  INSTAGRAM
+  TIKTOK
+  GOOGLE
+  REDDIT
+  WALKING_BY
+  NEWS
+  OTHER
+  NO_ANSWER
+}
+
 enum DinnerRequestStatus {
   OPEN
   MATCHED
@@ -176,15 +218,40 @@ model Member {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  // Phone is the unique identifier
-  phone     String   @unique
+  // Identity
+  phone     String   @unique // E.164 format
+  fullName  String?
 
-  // Waitlist status
-  status    String   @default("waitlist") // waitlist, active, inactive
+  // Profile
+  homeRegion        HomeRegion?
+  travelRadius      TravelRadius?
+  ageRange          AgeRange?
+  dinnerFrequency   DinnerFrequency?
+  diningStyle       String[]        @default([]) // multi-select tags
+  socialPreference  String?         // couples, solo, mixed, any
+  referralSource    ReferralSource?
 
-  // SMS notification tracking
+  // Status
+  status              String    @default("waitlist") // waitlist, active, inactive
+  onboardingCompletedAt DateTime?
+
+  // Notification tracking
   notifiedAt DateTime?
 
   @@index([phone])
   @@index([status])
+}
+
+model PhoneVerificationCode {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  verifiedAt DateTime?
+  lastResendAt DateTime?
+
+  @@index([phone])
+  @@index([expiresAt])
 }
