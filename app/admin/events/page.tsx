@@ -1,13 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createEvent } from '@/lib/actions/event-actions'
 import { SubmitButton } from '@/components/submit-button'
 import type { CreateEventInput } from '@/lib/validations'
 
 export default function AdminEventsPage() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 

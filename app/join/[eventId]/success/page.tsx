@@ -15,7 +15,7 @@ export default function RsvpSuccessPage() {
         </h1>
 
         <p className="text-2xl text-white/90 mb-8 drop-shadow">
-          We've received your registration. Check your email for details.
+          We&apos;ve received your registration. Check your email for details.
         </p>
 
         <div className="flex gap-4 justify-center">

@@ -17,7 +17,6 @@ export default function JoinEventPage() {
 
   const [stepAData, setStepAData] = useState<RsvpStepAInput | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleStepANext = (data: RsvpStepAInput) => {
     setStepAData(data)
@@ -35,7 +34,6 @@ export default function JoinEventPage() {
       return
     }
 
-    setIsSubmitting(true)
     setError(null)
 
     const result = await createRsvp({
@@ -48,7 +46,6 @@ export default function JoinEventPage() {
       router.push(`/join/${eventId}/success`)
     } else {
       setError(result.error || 'Failed to submit RSVP')
-      setIsSubmitting(false)
     }
   }
 

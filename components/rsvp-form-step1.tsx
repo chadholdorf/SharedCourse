@@ -15,11 +15,11 @@ export function RsvpFormStep1({ onNext, initialData }: RsvpFormStep1Props) {
 
     const data: RsvpStepAInput = {
       partySize: Number(formData.get('partySize')),
-      budget: formData.get('budget') as any,
-      diet: formData.get('diet') as any,
+      budget: formData.get('budget') as 'ONE' | 'TWO',
+      diet: formData.get('diet') as 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | 'glutenFree' | 'dairyFree',
       allergies: formData.get('allergies') as string || '',
-      vibe: (formData.get('vibe') as any) || null,
-      afterDinner: (formData.get('afterDinner') as any) || null,
+      vibe: (formData.get('vibe') as 'relaxed' | 'conversational' | 'mix' | '') || null,
+      afterDinner: (formData.get('afterDinner') as 'home' | 'open' | '') || null,
     }
 
     onNext(data)
