@@ -43,7 +43,15 @@ export async function createEvent(input: CreateEventInput): Promise<ActionRespon
   }
 }
 
-export async function getOpenEvents() {
+export async function getOpenEvents(): Promise<Array<{
+  id: string
+  title: string
+  city: string
+  startAt: Date
+  rsvpCloseAt: Date
+  groupSize: number
+  _count: { rsvps: number }
+}>> {
   const now = new Date()
 
   const events = await prisma.event.findMany({
@@ -68,7 +76,15 @@ export async function getOpenEvents() {
   return events
 }
 
-export async function getEventById(id: string) {
+export async function getEventById(id: string): Promise<{
+  id: string
+  title: string
+  city: string
+  startAt: Date
+  rsvpCloseAt: Date
+  status: EventStatus
+  groupSize: number
+} | null> {
   const event = await prisma.event.findUnique({
     where: { id },
     select: {
