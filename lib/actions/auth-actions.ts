@@ -94,6 +94,25 @@ export async function sendVerificationCode(
 ): Promise<ActionResponse<{ phone: string }>> {
   try {
     const formattedPhone = formatPhoneE164(phone)
+    const isProduction = process.env.NODE_ENV === 'production'
+
+    // Production safety: Check Twilio credentials
+    if (isProduction) {
+      const hasAccountSid = !!process.env.TWILIO_ACCOUNT_SID
+      const hasAuthToken = !!process.env.TWILIO_AUTH_TOKEN
+      const hasFromNumber = !!process.env.TWILIO_PHONE_NUMBER
+
+      if (!hasAccountSid || !hasAuthToken || !hasFromNumber) {
+        console.error('🚨 FATAL: Twilio credentials missing in production')
+        console.error(`   TWILIO_ACCOUNT_SID: ${hasAccountSid ? 'SET' : 'MISSING'}`)
+        console.error(`   TWILIO_AUTH_TOKEN: ${hasAuthToken ? 'SET' : 'MISSING'}`)
+        console.error(`   TWILIO_PHONE_NUMBER: ${hasFromNumber ? 'SET' : 'MISSING'}`)
+        return {
+          success: false,
+          error: "We couldn't send a text. Please try again in a moment.",
+        }
+      }
+    }
 
     // Check rate limit on resends
     const recentCode = await prisma.phoneVerificationCode.findFirst({
@@ -120,8 +139,6 @@ export async function sendVerificationCode(
     const codeHash = hashCode(code)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
-    const isDev = process.env.NODE_ENV !== 'production'
-
     // Store verification code
     await prisma.phoneVerificationCode.create({
       data: {
@@ -129,17 +146,18 @@ export async function sendVerificationCode(
         codeHash,
         expiresAt,
         lastResendAt: new Date(),
-        // Store raw code in dev mode only for debugging
-        otpDebugCode: isDev ? code : null,
+        // Store raw code in dev mode ONLY for debugging
+        otpDebugCode: isProduction ? null : code,
       },
     })
 
+    // Log OTP generation (production-safe - no code logged in prod)
     console.log(`🔐 OTP Code generated for ${formattedPhone}`)
-    if (isDev) {
+    if (!isProduction) {
       console.log(`   DEV MODE: Code is ${code}`)
     }
 
-    // Send SMS
+    // Send SMS via Twilio
     console.log(`📤 OTP SMS sending to ${formattedPhone}`)
     const smsSuccess = await sendSms(
       formattedPhone,
@@ -149,14 +167,15 @@ export async function sendVerificationCode(
     if (!smsSuccess) {
       console.error(`❌ OTP SMS failed for ${formattedPhone}`)
 
-      // In production, return error if SMS fails
-      if (!isDev) {
+      // Production: Always return error if SMS fails
+      if (isProduction) {
         return {
           success: false,
-          error: "We couldn't send a code right now. Please try again in a minute.",
+          error: "We couldn't send a text. Please try again in a moment.",
         }
       }
-      // In dev, allow it to proceed (code is in DB)
+
+      // Dev: Allow proceeding with on-screen code
       console.log('   ℹ️  Proceeding anyway in dev mode - code stored in DB')
     } else {
       console.log(`✅ OTP SMS sent successfully to ${formattedPhone}`)
@@ -260,11 +279,11 @@ export async function isPhoneVerified(phone: string): Promise<boolean> {
 
 /**
  * Get debug OTP code (development only)
+ * Returns null in production for safety
  */
 export async function getDebugOtpCode(phone: string): Promise<string | null> {
-  const isDev = process.env.NODE_ENV !== 'production'
-
-  if (!isDev) {
+  // Production safety: Never return debug codes in production
+  if (process.env.NODE_ENV === 'production') {
     return null
   }
 
