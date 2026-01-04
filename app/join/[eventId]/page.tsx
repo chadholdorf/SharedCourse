@@ -36,9 +36,9 @@ export default function JoinEventPage() {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       partySize: Number(formData.get('partySize')),
-      diet: formData.get('diet') as string,
+      diet: formData.get('diet') as 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | 'glutenFree' | 'dairyFree',
       allergies: formData.get('allergies') as string || '',
-      vibe: (formData.get('vibe') as string) || null,
+      vibe: (formData.get('vibe') as 'relaxed' | 'conversational' | 'mix' | '') || null,
     })
 
     if (result.success) {
