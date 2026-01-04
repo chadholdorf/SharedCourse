@@ -20,6 +20,57 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Global input readability fix */
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  textarea {
+    color: #111827;
+    font-weight: 400;
+  }
+
+  input[type="text"]::placeholder,
+  input[type="email"]::placeholder,
+  input[type="tel"]::placeholder,
+  input[type="password"]::placeholder,
+  input[type="number"]::placeholder,
+  input[type="search"]::placeholder,
+  input[type="url"]::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+  }
+
+  /* Maintain dark text on focus */
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="tel"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="url"]:focus,
+  textarea:focus {
+    color: #111827;
+  }
+
+  /* Don't override disabled state colors set by Tailwind */
+  input[type="text"]:disabled,
+  input[type="email"]:disabled,
+  input[type="tel"]:disabled,
+  input[type="password"]:disabled,
+  input[type="number"]:disabled,
+  input[type="search"]:disabled,
+  input[type="url"]:disabled,
+  textarea:disabled {
+    /* Let Tailwind's disabled: utility classes take precedence */
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
