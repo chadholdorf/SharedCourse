@@ -42,17 +42,31 @@ enum AfterDinner {
   open
 }
 
-model Event {
-  id            String       @id @default(cuid())
-  title         String
-  city          String
-  startAt       DateTime
-  rsvpCloseAt   DateTime
-  groupSize     Int          @default(6)
-  status        EventStatus  @default(draft)
-  createdAt     DateTime     @default(now())
+enum DinnerRequestStatus {
+  OPEN
+  MATCHED
+  CANCELED
+  EXPIRED
+}
 
-  rsvps         Rsvp[]
+enum ProposedDinnerStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}
+
+model Event {
+  id              String          @id @default(cuid())
+  title           String
+  city            String
+  startAt         DateTime
+  rsvpCloseAt     DateTime
+  groupSize       Int             @default(6)
+  status          EventStatus     @default(draft)
+  createdAt       DateTime        @default(now())
+
+  rsvps           Rsvp[]
+  proposedDinner  ProposedDinner?
 
   @@index([status, rsvpCloseAt])
 }
@@ -80,4 +94,80 @@ model Rsvp {
   @@unique([eventId, email], name: "unique_event_email")
   @@index([eventId])
   @@index([email])
+}
+
+model DinnerRequest {
+  id                    String                @id @default(cuid())
+  createdAt             DateTime              @default(now())
+  status                DinnerRequestStatus   @default(OPEN)
+
+  // Location
+  city                  String
+
+  // Primary contact (required)
+  name                  String
+  phone                 String                // E.164 format, unique identifier
+  email                 String?               // Optional
+
+  // Couple handling
+  isCouple              Boolean               @default(false)
+  partnerName           String?
+  partnerPhone          String?
+
+  // Preferences
+  budget                Budget
+  diet                  Diet
+  allergies             String                @default("")
+  vibe                  Vibe?
+
+  // Availability (JSON for now)
+  availabilityWindows   Json?
+
+  // Relations
+  proposedDinnerMembers ProposedDinnerMember[]
+
+  @@index([phone, status])
+  @@index([city, status])
+}
+
+model ProposedDinner {
+  id          String                @id @default(cuid())
+  createdAt   DateTime              @default(now())
+  status      ProposedDinnerStatus  @default(PENDING)
+
+  // Event details
+  eventId     String?               @unique
+  event       Event?                @relation(fields: [eventId], references: [id])
+
+  city        String
+  scheduledAt DateTime?
+
+  // Relations
+  members     ProposedDinnerMember[]
+
+  @@index([status, city])
+}
+
+model ProposedDinnerMember {
+  id                String         @id @default(cuid())
+  createdAt         DateTime       @default(now())
+
+  proposedDinnerId  String
+  proposedDinner    ProposedDinner @relation(fields: [proposedDinnerId], references: [id], onDelete: Cascade)
+
+  dinnerRequestId   String
+  dinnerRequest     DinnerRequest  @relation(fields: [dinnerRequestId], references: [id])
+
+  // Contact info (denormalized for convenience)
+  phone             String
+  partnerPhone      String?
+  partySize         Int
+
+  // Confirmation
+  confirmed         Boolean        @default(false)
+  confirmedAt       DateTime?
+
+  @@index([proposedDinnerId])
+  @@index([dinnerRequestId])
+  @@index([phone])
 }

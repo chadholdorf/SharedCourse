@@ -27,3 +27,24 @@ export const createRsvpSchema = z.object({
 })
 
 export type CreateRsvpInput = z.infer<typeof createRsvpSchema>
+
+// DinnerRequest validations
+export const createDinnerRequestSchema = z.object({
+  city: z.string().min(1, 'City is required').max(100),
+  name: z.string().min(1, 'Name is required').max(100),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in E.164 format (e.g., +14155551234)'),
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  isCouple: z.boolean().default(false),
+  partnerName: z.string().max(100).optional().or(z.literal('')),
+  partnerPhone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Partner phone must be in E.164 format').optional().or(z.literal('')),
+  budget: z.enum(['ONE', 'TWO']),
+  diet: z.enum(['none', 'vegetarian', 'vegan', 'pescatarian', 'glutenFree', 'dairyFree']),
+  allergies: z.string().max(500).default(''),
+  vibe: z.enum(['relaxed', 'conversational', 'mix']).nullable().optional(),
+})
+.refine(data => !data.isCouple || data.partnerName, {
+  message: 'Partner name is required when requesting as a couple',
+  path: ['partnerName'],
+})
+
+export type CreateDinnerRequestInput = z.infer<typeof createDinnerRequestSchema>
