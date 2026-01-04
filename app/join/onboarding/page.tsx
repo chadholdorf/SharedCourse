@@ -16,16 +16,16 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   // Step 3: Home region
-  const [homeRegion, setHomeRegion] = useState<string>('')
+  const [homeRegion, setHomeRegion] = useState<'NORTH_BAY' | 'SAN_FRANCISCO' | 'EAST_BAY' | 'SOUTH_BAY' | ''>('')
 
   // Step 4: Travel radius
-  const [travelRadius, setTravelRadius] = useState<string>('')
+  const [travelRadius, setTravelRadius] = useState<'LOCAL' | 'SHORT_DRIVE' | 'LONG_DRIVE' | ''>('')
 
   // Step 5: Age range
-  const [ageRange, setAgeRange] = useState<string>('')
+  const [ageRange, setAgeRange] = useState<'UNDER_25' | 'AGE_25_34' | 'AGE_35_44' | 'AGE_45_54' | 'AGE_55_PLUS' | 'NO_ANSWER' | ''>('')
 
   // Step 6: Dinner frequency
-  const [dinnerFrequency, setDinnerFrequency] = useState<string>('')
+  const [dinnerFrequency, setDinnerFrequency] = useState<'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'RARELY' | 'NO_ANSWER' | ''>('')
 
   useEffect(() => {
     const storedPhone = sessionStorage.getItem('signup_phone')
@@ -49,10 +49,10 @@ export default function OnboardingPage() {
     setIsLoading(true)
 
     const profileData: {
-      homeRegion?: string
-      travelRadius?: string
-      ageRange?: string
-      dinnerFrequency?: string
+      homeRegion?: 'NORTH_BAY' | 'SAN_FRANCISCO' | 'EAST_BAY' | 'SOUTH_BAY'
+      travelRadius?: 'LOCAL' | 'SHORT_DRIVE' | 'LONG_DRIVE'
+      ageRange?: 'UNDER_25' | 'AGE_25_34' | 'AGE_35_44' | 'AGE_45_54' | 'AGE_55_PLUS' | 'NO_ANSWER'
+      dinnerFrequency?: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'RARELY' | 'NO_ANSWER'
     } = {}
 
     if (homeRegion) profileData.homeRegion = homeRegion
