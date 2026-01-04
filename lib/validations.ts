@@ -16,25 +16,14 @@ export const createEventSchema = z.object({
 export type CreateEventInput = z.infer<typeof createEventSchema>
 
 // RSVP validations
-export const rsvpStepASchema = z.object({
-  partySize: z.number().int().min(1).max(2),
-  budget: z.enum(['ONE', 'TWO']),
+export const createRsvpSchema = z.object({
+  eventId: z.string().cuid('Invalid event ID'),
+  name: z.string().min(1, 'Name is required').max(100),
+  email: z.string().email('Invalid email address'),
+  partySize: z.number().int().min(1).max(2, 'Party size must be 1 or 2'),
   diet: z.enum(['none', 'vegetarian', 'vegan', 'pescatarian', 'glutenFree', 'dairyFree']),
   allergies: z.string().max(500).default(''),
   vibe: z.enum(['relaxed', 'conversational', 'mix']).nullable().optional(),
-  afterDinner: z.enum(['home', 'open']).nullable().optional(),
 })
 
-export const rsvpStepBSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
-})
-
-export const createRsvpSchema = rsvpStepASchema.merge(rsvpStepBSchema).extend({
-  eventId: z.string().cuid('Invalid event ID'),
-})
-
-export type RsvpStepAInput = z.infer<typeof rsvpStepASchema>
-export type RsvpStepBInput = z.infer<typeof rsvpStepBSchema>
 export type CreateRsvpInput = z.infer<typeof createRsvpSchema>

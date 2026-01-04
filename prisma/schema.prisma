@@ -77,6 +77,7 @@ model Rsvp {
 
   createdAt     DateTime     @default(now())
 
+  @@unique([eventId, email], name: "unique_event_email")
   @@index([eventId])
   @@index([email])
 }

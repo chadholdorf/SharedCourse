@@ -9,12 +9,14 @@ interface EventCardProps {
     startAt: Date
     rsvpCloseAt: Date
     groupSize: number
-    _count?: { rsvps: number }
+    rsvpCount: number
+    spotsLeft: number
   }
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const spotsLeft = event.groupSize - (event._count?.rsvps || 0)
+  const isFull = event.spotsLeft === 0
+  const isPastDeadline = new Date() > event.rsvpCloseAt
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
@@ -32,16 +34,27 @@ export function EventCard({ event }: EventCardProps) {
         </p>
         <p>
           <span className="font-semibold">Spots Available:</span>{' '}
-          {spotsLeft} of {event.groupSize}
+          <span className={event.spotsLeft <= 2 ? 'text-orange-600 font-bold' : ''}>
+            {event.spotsLeft} of {event.groupSize}
+          </span>
         </p>
       </div>
 
-      <Link
-        href={`/join/${event.id}`}
-        className="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
-      >
-        Join Event
-      </Link>
+      {isFull || isPastDeadline ? (
+        <button
+          disabled
+          className="block w-full text-center px-4 py-2 bg-gray-300 text-gray-600 rounded-lg font-semibold cursor-not-allowed"
+        >
+          {isFull ? 'Event Full' : 'RSVP Closed'}
+        </button>
+      ) : (
+        <Link
+          href={`/join/${event.id}`}
+          className="block w-full text-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+        >
+          Join Event
+        </Link>
+      )}
     </div>
   )
 }

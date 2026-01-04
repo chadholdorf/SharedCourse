@@ -17,62 +17,60 @@ export async function createRsvp(input: CreateRsvpInput): Promise<ActionResponse
     // Validate input
     const validated = createRsvpSchema.parse(input)
 
-    // Check event exists and is open
-    const event = await prisma.event.findUnique({
-      where: { id: validated.eventId },
-      select: {
-        id: true,
-        status: true,
-        rsvpCloseAt: true,
-        groupSize: true,
-        _count: { select: { rsvps: true } },
-      },
-    })
+    // Use transaction to prevent race conditions
+    const rsvp = await prisma.$transaction(async (tx) => {
+      // Check event exists and is open
+      const event = await tx.event.findUnique({
+        where: { id: validated.eventId },
+        select: {
+          id: true,
+          status: true,
+          rsvpCloseAt: true,
+          groupSize: true,
+          rsvps: {
+            select: {
+              partySize: true,
+            },
+          },
+        },
+      })
 
-    if (!event) {
-      return { success: false, error: 'Event not found' }
-    }
+      if (!event) {
+        throw new Error('Event not found')
+      }
 
-    if (event.status !== EventStatus.open) {
-      return { success: false, error: 'Event is not open for RSVPs' }
-    }
+      if (event.status !== EventStatus.open) {
+        throw new Error('Event is not open for RSVPs')
+      }
 
-    if (new Date() > event.rsvpCloseAt) {
-      return { success: false, error: 'RSVP deadline has passed' }
-    }
+      if (new Date() > event.rsvpCloseAt) {
+        throw new Error('RSVP deadline has passed')
+      }
 
-    // Check if event is full
-    const totalRsvps = event._count.rsvps
-    if (totalRsvps >= event.groupSize) {
-      return { success: false, error: 'Event is full' }
-    }
+      // Calculate current capacity based on sum of partySize
+      const totalGuests = event.rsvps.reduce((sum, rsvp) => sum + rsvp.partySize, 0)
+      const spotsLeft = event.groupSize - totalGuests
 
-    // Check for duplicate email
-    const existingRsvp = await prisma.rsvp.findFirst({
-      where: {
-        eventId: validated.eventId,
-        email: validated.email,
-      },
-    })
+      // Check if enough capacity for this party
+      if (spotsLeft < validated.partySize) {
+        throw new Error(`Not enough spots available. Only ${spotsLeft} spots left.`)
+      }
 
-    if (existingRsvp) {
-      return { success: false, error: 'You have already RSVPed to this event' }
-    }
-
-    // Create RSVP
-    const rsvp = await prisma.rsvp.create({
-      data: {
-        eventId: validated.eventId,
-        name: validated.name,
-        email: validated.email,
-        phone: validated.phone,
-        partySize: validated.partySize,
-        budget: validated.budget,
-        diet: validated.diet,
-        allergies: validated.allergies || '',
-        vibe: validated.vibe || null,
-        afterDinner: validated.afterDinner || null,
-      },
+      // Create RSVP (unique constraint will prevent duplicates)
+      return await tx.rsvp.create({
+        data: {
+          eventId: validated.eventId,
+          name: validated.name,
+          email: validated.email,
+          phone: '', // Not collected in Sprint 1
+          partySize: validated.partySize,
+          budget: 'ONE', // Default value, not collected in Sprint 1
+          diet: validated.diet,
+          allergies: validated.allergies || '',
+          vibe: validated.vibe || null,
+          afterDinner: null, // Not collected in Sprint 1
+        },
+      })
     })
 
     // Revalidate events list
@@ -84,7 +82,15 @@ export async function createRsvp(input: CreateRsvpInput): Promise<ActionResponse
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message }
     }
+
+    // Handle unique constraint violation (duplicate RSVP)
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return { success: false, error: 'You have already RSVPed to this event' }
+    }
+
+    // Handle other errors
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create RSVP'
     console.error('Failed to create RSVP:', error)
-    return { success: false, error: 'Failed to create RSVP' }
+    return { success: false, error: errorMessage }
   }
 }

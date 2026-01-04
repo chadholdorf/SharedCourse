@@ -50,7 +50,8 @@ export async function getOpenEvents(): Promise<Array<{
   startAt: Date
   rsvpCloseAt: Date
   groupSize: number
-  _count: { rsvps: number }
+  rsvpCount: number
+  spotsLeft: number
 }>> {
   const now = new Date()
 
@@ -67,13 +68,29 @@ export async function getOpenEvents(): Promise<Array<{
       startAt: true,
       rsvpCloseAt: true,
       groupSize: true,
-      _count: {
-        select: { rsvps: true },
+      rsvps: {
+        select: {
+          partySize: true,
+        },
       },
     },
   })
 
-  return events
+  // Calculate spots left for each event
+  return events.map(event => {
+    const totalGuests = event.rsvps.reduce((sum, rsvp) => sum + rsvp.partySize, 0)
+    const spotsLeft = event.groupSize - totalGuests
+    return {
+      id: event.id,
+      title: event.title,
+      city: event.city,
+      startAt: event.startAt,
+      rsvpCloseAt: event.rsvpCloseAt,
+      groupSize: event.groupSize,
+      rsvpCount: event.rsvps.length,
+      spotsLeft: Math.max(0, spotsLeft),
+    }
+  })
 }
 
 export async function getEventById(id: string): Promise<{
@@ -99,4 +116,53 @@ export async function getEventById(id: string): Promise<{
   })
 
   return event
+}
+
+export async function getEventForJoin(id: string): Promise<{
+  id: string
+  title: string
+  city: string
+  startAt: Date
+  rsvpCloseAt: Date
+  groupSize: number
+  spotsLeft: number
+  isOpen: boolean
+} | null> {
+  const event = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      city: true,
+      startAt: true,
+      rsvpCloseAt: true,
+      groupSize: true,
+      status: true,
+      rsvps: {
+        select: {
+          partySize: true,
+        },
+      },
+    },
+  })
+
+  if (!event) {
+    return null
+  }
+
+  const totalGuests = event.rsvps.reduce((sum, rsvp) => sum + rsvp.partySize, 0)
+  const spotsLeft = Math.max(0, event.groupSize - totalGuests)
+  const now = new Date()
+  const isOpen = event.status === EventStatus.open && event.rsvpCloseAt > now && spotsLeft > 0
+
+  return {
+    id: event.id,
+    title: event.title,
+    city: event.city,
+    startAt: event.startAt,
+    rsvpCloseAt: event.rsvpCloseAt,
+    groupSize: event.groupSize,
+    spotsLeft,
+    isOpen,
+  }
 }
