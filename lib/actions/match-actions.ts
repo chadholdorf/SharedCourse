@@ -111,12 +111,21 @@ export async function tryMatchForRequest(requestId: string): Promise<void> {
   }
 }
 
+type MatchRequestWithMember = {
+  id: string
+  partyType: string
+  matchPreference: string
+  timeWindow: string
+  region: string
+  member: { phone: string }
+}
+
 /**
  * Check if two requests are compatible
  */
 function isCompatible(
-  requestA: any,
-  requestB: any
+  requestA: MatchRequestWithMember,
+  requestB: MatchRequestWithMember
 ): boolean {
   // Rule 1: Same region (already filtered in query)
 
@@ -178,7 +187,7 @@ function checkTimeCompatibility(timeA: string, timeB: string): boolean {
 /**
  * Create a match between two requests
  */
-async function createMatch(requestA: any, requestB: any): Promise<void> {
+async function createMatch(requestA: MatchRequestWithMember, requestB: MatchRequestWithMember): Promise<void> {
   try {
     const match = await prisma.dinnerMatch.create({
       data: {
