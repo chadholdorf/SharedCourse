@@ -84,6 +84,46 @@ enum ReferralSource {
   NO_ANSWER
 }
 
+// Sprint 2: MVP Matching Enums
+enum Region {
+  NORTH_BAY
+  SAN_FRANCISCO
+  EAST_BAY
+  SOUTH_BAY
+}
+
+enum TimeWindow {
+  THIS_WEEK
+  NEXT_WEEK
+  FLEXIBLE
+}
+
+enum PartyType {
+  SOLO
+  COUPLE
+}
+
+enum MatchPreference {
+  SOLO_ONLY
+  COUPLE_ONLY
+  OPEN
+}
+
+enum MatchRequestStatus {
+  OPEN
+  MATCHED_PENDING_CONFIRMATION
+  CONFIRMED
+  CANCELED
+  EXPIRED
+}
+
+enum DinnerMatchStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CANCELED
+  EXPIRED
+}
+
 enum DinnerRequestStatus {
   OPEN
   MATCHED
@@ -238,6 +278,9 @@ model Member {
   // Notification tracking
   notifiedAt DateTime?
 
+  // Relations
+  matchRequests MatchRequest[]
+
   @@index([phone])
   @@index([status])
 }
@@ -254,4 +297,49 @@ model PhoneVerificationCode {
 
   @@index([phone])
   @@index([expiresAt])
+}
+
+// Sprint 2: MVP Matching Models
+model MatchRequest {
+  id               String              @id @default(cuid())
+  createdAt        DateTime            @default(now())
+
+  memberId         String
+  member           Member              @relation(fields: [memberId], references: [id])
+
+  region           Region
+  timeWindow       TimeWindow
+  partyType        PartyType
+  matchPreference  MatchPreference
+  status           MatchRequestStatus  @default(OPEN)
+
+  matchId          String?
+  matchAsA         DinnerMatch?        @relation("MatchA")
+  matchAsB         DinnerMatch?        @relation("MatchB")
+
+  @@index([status, region, createdAt])
+  @@index([memberId])
+}
+
+model DinnerMatch {
+  id               String             @id @default(cuid())
+  createdAt        DateTime           @default(now())
+  status           DinnerMatchStatus  @default(PENDING_CONFIRMATION)
+
+  requestAId       String             @unique
+  requestA         MatchRequest       @relation("MatchA", fields: [requestAId], references: [id])
+
+  requestBId       String             @unique
+  requestB         MatchRequest       @relation("MatchB", fields: [requestBId], references: [id])
+
+  phoneA           String
+  phoneB           String
+
+  confirmAAt       DateTime?
+  confirmBAt       DateTime?
+  canceledReason   String?
+
+  @@index([status])
+  @@index([phoneA])
+  @@index([phoneB])
 }

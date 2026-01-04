@@ -1,262 +1,202 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createDinnerRequest } from '@/lib/actions/dinner-request-actions'
-import { formatPhoneE164 } from '@/lib/phone-utils'
-import { SubmitButton } from '@/components/submit-button'
+import { createMatchRequest } from '@/lib/actions/match-actions'
+import { Header } from '@/components/header'
+import { TileCard } from '@/components/onboarding/tile-card'
+
+type Region = 'NORTH_BAY' | 'SAN_FRANCISCO' | 'EAST_BAY' | 'SOUTH_BAY'
+type TimeWindow = 'THIS_WEEK' | 'NEXT_WEEK' | 'FLEXIBLE'
+type PartyType = 'SOLO' | 'COUPLE'
+type MatchPreference = 'SOLO_ONLY' | 'COUPLE_ONLY' | 'OPEN'
 
 export default function RequestDinnerPage() {
   const router = useRouter()
+  const [phone, setPhone] = useState('')
+  const [region, setRegion] = useState<Region | ''>('')
+  const [timeWindow, setTimeWindow] = useState<TimeWindow | ''>('')
+  const [partyType, setPartyType] = useState<PartyType | ''>('')
+  const [matchPreference, setMatchPreference] = useState<MatchPreference | ''>('')
   const [error, setError] = useState<string | null>(null)
-  const [isCouple, setIsCouple] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    // Check if user is verified (has phone in session)
+    const verifiedPhone = sessionStorage.getItem('signup_phone') || sessionStorage.getItem('verified_phone')
+
+    if (!verifiedPhone) {
+      // Not verified, redirect to join
+      router.push('/join')
+      return
+    }
+
+    setPhone(verifiedPhone)
+
+    // Pre-fill region from member profile if exists
+    // For now, we'll let them select
+  }, [router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setIsLoading(true)
 
-    const formData = new FormData(e.currentTarget)
+    if (!region || !timeWindow || !partyType || !matchPreference) {
+      setError('Please complete all fields')
+      setIsLoading(false)
+      return
+    }
 
-    // Format phone numbers to E.164
-    const phone = formatPhoneE164(formData.get('phone') as string)
-    const partnerPhone = formData.get('partnerPhone') as string
-    const formattedPartnerPhone = partnerPhone ? formatPhoneE164(partnerPhone) : ''
-
-    const result = await createDinnerRequest({
-      city: formData.get('city') as string,
-      name: formData.get('name') as string,
+    const result = await createMatchRequest({
       phone,
-      email: formData.get('email') as string || '',
-      isCouple: formData.get('isCouple') === 'true',
-      partnerName: formData.get('partnerName') as string || '',
-      partnerPhone: formattedPartnerPhone,
-      budget: formData.get('budget') as 'ONE' | 'TWO',
-      diet: formData.get('diet') as 'none' | 'vegetarian' | 'vegan' | 'pescatarian' | 'glutenFree' | 'dairyFree',
-      allergies: formData.get('allergies') as string || '',
-      vibe: (formData.get('vibe') as 'relaxed' | 'conversational' | 'mix' | '') || null,
+      region,
+      timeWindow,
+      partyType,
+      matchPreference,
     })
+
+    setIsLoading(false)
 
     if (result.success) {
       router.push('/request/success')
     } else {
-      setError(result.error || 'Failed to submit request')
+      setError(result.error)
     }
   }
 
+  if (!phone) {
+    return null // Will redirect
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Request a Shared Dinner</h1>
-          <p className="text-gray-600 mb-6">
-            Tell us your preferences and we&apos;ll text you when we find a match.
-          </p>
+    <>
+      <Header />
+
+      <main className="min-h-screen bg-gray-50 px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              Request a Dinner
+            </h1>
+            <p className="text-base text-gray-600">
+              We&apos;ll match you with someone nearby and text you to confirm.
+            </p>
+          </div>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800">{error}</p>
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* City */}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Region */}
             <div>
-              <label htmlFor="city" className="block text-sm font-semibold text-gray-700 mb-2">
-                City *
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Where do you want to meet? *
               </label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                required
-                placeholder="San Francisco"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                Your Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                placeholder="John Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                required
-                placeholder="415-555-1234"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <p className="text-sm text-gray-500 mt-1">We&apos;ll text you updates. No spam.</p>
-            </div>
-
-            {/* Email (optional) */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email (optional)
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="john@example.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Solo or Couple */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Request Type *
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="isCouple"
-                    value="false"
-                    checked={!isCouple}
-                    onChange={() => setIsCouple(false)}
-                    className="mr-2"
-                  />
-                  <span>Just me</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="isCouple"
-                    value="true"
-                    checked={isCouple}
-                    onChange={() => setIsCouple(true)}
-                    className="mr-2"
-                  />
-                  <span>Me + Partner (couple)</span>
-                </label>
+              <div className="space-y-3">
+                <TileCard
+                  label="North Bay"
+                  selected={region === 'NORTH_BAY'}
+                  onClick={() => setRegion('NORTH_BAY')}
+                />
+                <TileCard
+                  label="San Francisco"
+                  selected={region === 'SAN_FRANCISCO'}
+                  onClick={() => setRegion('SAN_FRANCISCO')}
+                />
+                <TileCard
+                  label="East Bay"
+                  selected={region === 'EAST_BAY'}
+                  onClick={() => setRegion('EAST_BAY')}
+                />
+                <TileCard
+                  label="South Bay"
+                  selected={region === 'SOUTH_BAY'}
+                  onClick={() => setRegion('SOUTH_BAY')}
+                />
               </div>
             </div>
 
-            {/* Partner fields (if couple) */}
-            {isCouple && (
-              <>
-                <div>
-                  <label htmlFor="partnerName" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Partner&apos;s Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="partnerName"
-                    name="partnerName"
-                    required={isCouple}
-                    placeholder="Jane Doe"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="partnerPhone" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Partner&apos;s Phone (optional)
-                  </label>
-                  <input
-                    type="tel"
-                    id="partnerPhone"
-                    name="partnerPhone"
-                    placeholder="415-555-5678"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Budget */}
+            {/* Time Window */}
             <div>
-              <label htmlFor="budget" className="block text-sm font-semibold text-gray-700 mb-2">
-                Budget Preference *
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                When? *
               </label>
-              <select
-                id="budget"
-                name="budget"
-                required
-                defaultValue=""
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="" disabled>Select budget...</option>
-                <option value="ONE">$ (Budget-friendly)</option>
-                <option value="TWO">$$ (Moderate)</option>
-              </select>
+              <div className="space-y-3">
+                <TileCard
+                  label="This week"
+                  selected={timeWindow === 'THIS_WEEK'}
+                  onClick={() => setTimeWindow('THIS_WEEK')}
+                />
+                <TileCard
+                  label="Next week"
+                  selected={timeWindow === 'NEXT_WEEK'}
+                  onClick={() => setTimeWindow('NEXT_WEEK')}
+                />
+                <TileCard
+                  label="Flexible"
+                  selected={timeWindow === 'FLEXIBLE'}
+                  onClick={() => setTimeWindow('FLEXIBLE')}
+                />
+              </div>
             </div>
 
-            {/* Diet */}
+            {/* Party Type */}
             <div>
-              <label htmlFor="diet" className="block text-sm font-semibold text-gray-700 mb-2">
-                Dietary Preference *
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Who&apos;s coming? *
               </label>
-              <select
-                id="diet"
-                name="diet"
-                required
-                defaultValue="none"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="none">No restrictions</option>
-                <option value="vegetarian">Vegetarian</option>
-                <option value="vegan">Vegan</option>
-                <option value="pescatarian">Pescatarian</option>
-                <option value="glutenFree">Gluten-Free</option>
-                <option value="dairyFree">Dairy-Free</option>
-              </select>
+              <div className="space-y-3">
+                <TileCard
+                  label="Just me"
+                  selected={partyType === 'SOLO'}
+                  onClick={() => setPartyType('SOLO')}
+                />
+                <TileCard
+                  label="Me + partner"
+                  selected={partyType === 'COUPLE'}
+                  onClick={() => setPartyType('COUPLE')}
+                />
+              </div>
             </div>
 
-            {/* Allergies */}
+            {/* Match Preference */}
             <div>
-              <label htmlFor="allergies" className="block text-sm font-semibold text-gray-700 mb-2">
-                Allergies or Additional Restrictions
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Match me with... *
               </label>
-              <textarea
-                id="allergies"
-                name="allergies"
-                rows={3}
-                placeholder="e.g., peanuts, shellfish..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+              <div className="space-y-3">
+                <TileCard
+                  label="Another solo diner"
+                  selected={matchPreference === 'SOLO_ONLY'}
+                  onClick={() => setMatchPreference('SOLO_ONLY')}
+                />
+                <TileCard
+                  label="Another couple"
+                  selected={matchPreference === 'COUPLE_ONLY'}
+                  onClick={() => setMatchPreference('COUPLE_ONLY')}
+                />
+                <TileCard
+                  label="Open to either"
+                  selected={matchPreference === 'OPEN'}
+                  onClick={() => setMatchPreference('OPEN')}
+                />
+              </div>
             </div>
 
-            {/* Vibe */}
-            <div>
-              <label htmlFor="vibe" className="block text-sm font-semibold text-gray-700 mb-2">
-                Dinner Vibe Preference
-              </label>
-              <select
-                id="vibe"
-                name="vibe"
-                defaultValue=""
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="">No preference</option>
-                <option value="relaxed">Relaxed</option>
-                <option value="conversational">Conversational</option>
-                <option value="mix">Mix of both</option>
-              </select>
-            </div>
-
-            <SubmitButton>Submit Request</SubmitButton>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full px-6 py-3 text-base font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Submitting...' : 'Request Dinner'}
+            </button>
           </form>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   )
 }
