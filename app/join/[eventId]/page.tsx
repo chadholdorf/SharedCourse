@@ -61,7 +61,7 @@ export default function JoinEventPage() {
       <main className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h1>
-          <p className="text-gray-600">This event doesn't exist or has been removed.</p>
+          <p className="text-gray-600">This event doesn&apos;t exist or has been removed.</p>
         </div>
       </main>
     )
