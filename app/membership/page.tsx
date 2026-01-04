@@ -3,16 +3,28 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/header'
+import { joinWaitlist } from '@/lib/actions/member-actions'
 
 export default function MembershipPage() {
   const [submitted, setSubmitted] = useState(false)
-  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual waitlist/membership signup
-    setSubmitted(true)
+    setError(null)
+    setIsLoading(true)
+
+    const result = await joinWaitlist({ phone })
+
+    setIsLoading(false)
+
+    if (result.success) {
+      setSubmitted(true)
+    } else {
+      setError(result.error)
+    }
   }
 
   return (
@@ -28,14 +40,22 @@ export default function MembershipPage() {
                   Join the Club
                 </h1>
                 <p className="text-lg text-gray-600">
-                  Memberships launching soon. Leave your details and we&apos;ll text you when we&apos;re ready.
+                  Memberships launching soon. Leave your number and we&apos;ll text you when we&apos;re ready.
                 </p>
               </div>
+
+              {error && (
+                <div className="max-w-md mx-auto">
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
+                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -44,32 +64,20 @@ export default function MembershipPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     required
                     placeholder="415-555-1234"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 mt-2">
                     We&apos;ll text you when memberships open.
                   </p>
                 </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email (optional)
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  />
-                </div>
-
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 text-base font-medium text-white bg-gray-900 border border-transparent rounded-md hover:bg-gray-800 transition-colors"
+                  disabled={isLoading}
+                  className="w-full px-6 py-3 text-base font-medium text-white bg-gray-900 border border-transparent rounded-md hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Join Waitlist
+                  {isLoading ? 'Joining...' : 'Join Waitlist'}
                 </button>
               </form>
 

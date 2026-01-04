@@ -171,3 +171,20 @@ model ProposedDinnerMember {
   @@index([dinnerRequestId])
   @@index([phone])
 }
+
+model Member {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Phone is the unique identifier
+  phone     String   @unique
+
+  // Waitlist status
+  status    String   @default("waitlist") // waitlist, active, inactive
+
+  // SMS notification tracking
+  notifiedAt DateTime?
+
+  @@index([phone])
+  @@index([status])
+}
