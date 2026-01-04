@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { OverflowMenu } from './overflow-menu'
 
 export function Header() {
   return (
@@ -10,8 +11,8 @@ export function Header() {
             BASC
           </Link>
 
-          {/* Nav */}
-          <nav className="hidden sm:flex items-center gap-8">
+          {/* Desktop Nav */}
+          <nav className="hidden sm:flex items-center gap-6">
             <Link
               href="/request"
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -24,16 +25,18 @@ export function Header() {
             >
               Become a Member
             </Link>
+            <OverflowMenu />
           </nav>
 
-          {/* Mobile menu button */}
-          <div className="sm:hidden">
+          {/* Mobile Nav */}
+          <div className="sm:hidden flex items-center gap-3">
             <Link
               href="/membership"
               className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-gray-900 border border-transparent rounded-md"
             >
               Join
             </Link>
+            <OverflowMenu />
           </div>
         </div>
       </div>
